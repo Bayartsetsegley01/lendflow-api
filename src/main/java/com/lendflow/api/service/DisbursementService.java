@@ -16,16 +16,16 @@ public class DisbursementService {
     private final LoanRepository loanRepository;
     private final AccountRepository accountRepository;
     private final TransactionRepository transactionRepository;
+    private final RepaymentService repaymentService;
 
     public DisbursementService(LoanRepository loanRepository, AccountRepository accountRepository,
-                                TransactionRepository transactionRepository) {
+                                TransactionRepository transactionRepository, RepaymentService repaymentService) {
         this.loanRepository = loanRepository;
         this.accountRepository = accountRepository;
         this.transactionRepository = transactionRepository;
+        this.repaymentService = repaymentService;
     }
 
-    // @Transactional чухал шалтгаан: Loan status, Account balance, Transaction record
-    // 3 нь бүгд амжилттай эсвэл бүгд rollback байх ёстой
     @Transactional
     public Loan disburse(Long loanId) {
         Loan loan = loanRepository.findById(loanId)
@@ -38,15 +38,9 @@ public class DisbursementService {
         Account account = accountRepository.findByUserId(loan.getUser().getId())
                 .orElseThrow(() -> new RuntimeException("Account not found for user"));
 
-        // 1. Дансны үлдэгдэлд зээлийн мөнгийг нэмнэ
         account.setBalance(account.getBalance().add(loan.getAmount()));
         accountRepository.save(account);
 
-        // 2. Зээлийн төлвийг шинэчилнэ
-        loan.setStatus(Loan.LoanStatus.DISBURSED);
-        loanRepository.save(loan);
-
-        // 3. Гүйлгээний бүртгэл үүсгэнэ
         Transaction transaction = new Transaction();
         transaction.setUser(loan.getUser());
         transaction.setLoan(loan);
@@ -54,8 +48,12 @@ public class DisbursementService {
         transaction.setAmount(loan.getAmount());
         transactionRepository.save(transaction);
 
-        // Мөнгө олгогдсоны дараа зээл ACTIVE (идэвхтэй, төлөгдөж эхлэх ёстой) болно
         loan.setStatus(Loan.LoanStatus.ACTIVE);
-        return loanRepository.save(loan);
+        loanRepository.save(loan);
+
+        // Мөнгө олгогдмогц, сар бүрийн төлөлтийн хуваарийг автоматаар үүсгэнэ
+        repaymentService.generateSchedule(loan);
+
+        return loan;
     }
 }
