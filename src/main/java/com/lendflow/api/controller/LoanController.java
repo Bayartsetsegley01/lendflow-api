@@ -4,6 +4,7 @@ package com.lendflow.api.controller;
 import com.lendflow.api.entity.Loan;
 import com.lendflow.api.service.DisbursementService;
 import com.lendflow.api.service.LoanService;
+import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
 import org.springframework.http.ResponseEntity;
@@ -30,7 +31,7 @@ public class LoanController {
     // Ингэснээр client "би хэн бэ" гэдгээ дамжуулах шаардлагагүй болно — token дотроос уншина.
     @PostMapping
     public ResponseEntity<Loan> applyForLoan(
-            @RequestBody LoanRequest request,
+            @Valid @RequestBody LoanRequest request,
             Authentication authentication
     ) {
         String userEmail = authentication.getName();
@@ -57,7 +58,12 @@ public class LoanController {
     }
 
     public record LoanRequest(
-            @NotNull @Positive BigDecimal amount,
-            @NotNull @Positive Integer termMonths
+            @NotNull(message = "amount is required")
+            @Positive(message = "amount must be positive")
+            BigDecimal amount,
+
+            @NotNull(message = "termMonths is required")
+            @Positive(message = "termMonths must be positive")
+            Integer termMonths
     ) {}
 }

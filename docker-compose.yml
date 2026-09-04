@@ -1,0 +1,31 @@
+services:
+  postgres:
+    image: postgres:15
+    environment:
+      POSTGRES_DB: lendflow
+      POSTGRES_USER: lendflow_user
+      POSTGRES_PASSWORD: lendflow123
+    ports:
+      - "5432:5432"
+    volumes:
+      - lendflow_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U lendflow_user -d lendflow"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build: .
+    ports:
+      - "8080:8080"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/lendflow
+      SPRING_DATASOURCE_USERNAME: lendflow_user
+      SPRING_DATASOURCE_PASSWORD: lendflow123
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+volumes:
+  lendflow_pgdata:
