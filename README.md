@@ -22,27 +22,31 @@ Digital lending & repayment platform. Хэрэглэгч зээл хүсэх, а
 
 ## Architecture
 
+```text
 React Frontend
-│
-REST API
-│
+      │
+   REST API
+      │
 Spring Boot Backend
-│
-┌───┴────┬─────────────┐
-│ │ │
-Loan Credit Assess Repayment
-Service Service Service
-│ │ │
-└────────┴─────────────┘
-│
-PostgreSQL
+      │
+  ┌───┴────┬─────────────┐
+  │        │             │
+Loan   Credit Assess   Repayment
+Service   Service       Service
+  │        │             │
+  └────────┴─────────────┘
+           │
+      PostgreSQL
+```
 
 
 ## Database Schema
 
+```text
 User ──1:1── Account
 User ──1:N── Loan ──1:N── Repayment
-──1:N── Transaction
+                    ──1:N── Transaction
+```
 
 
 ## API Endpoints
