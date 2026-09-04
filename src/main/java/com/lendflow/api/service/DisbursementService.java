@@ -4,6 +4,8 @@ package com.lendflow.api.service;
 import com.lendflow.api.entity.Account;
 import com.lendflow.api.entity.Loan;
 import com.lendflow.api.entity.Transaction;
+import com.lendflow.api.exception.AccountNotFoundException;
+import com.lendflow.api.exception.LoanNotFoundException;
 import com.lendflow.api.repository.AccountRepository;
 import com.lendflow.api.repository.LoanRepository;
 import com.lendflow.api.repository.TransactionRepository;
@@ -29,14 +31,14 @@ public class DisbursementService {
     @Transactional
     public Loan disburse(Long loanId) {
         Loan loan = loanRepository.findById(loanId)
-                .orElseThrow(() -> new RuntimeException("Loan not found with id: " + loanId));
+                .orElseThrow(() -> new LoanNotFoundException("Loan not found with id: " + loanId));
 
         if (loan.getStatus() != Loan.LoanStatus.APPROVED) {
             throw new IllegalArgumentException("Only APPROVED loans can be disbursed");
         }
 
         Account account = accountRepository.findByUserId(loan.getUser().getId())
-                .orElseThrow(() -> new RuntimeException("Account not found for user"));
+                .orElseThrow(() -> new AccountNotFoundException("Account not found for user"));
 
         account.setBalance(account.getBalance().add(loan.getAmount()));
         accountRepository.save(account);

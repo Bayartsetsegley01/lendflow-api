@@ -35,6 +35,8 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         // Register/Login үргэлж нээлттэй байх ёстой (нэвтрэхээс өмнө хэрэглэнэ)
                         .requestMatchers("/api/auth/**").permitAll()
+                        // Алдааны JSON хариу (GlobalExceptionHandler) нэвтрэлт шаардахгүй буцах ёстой
+                        .requestMatchers("/error").permitAll()
                         // Бусад бүх endpoint нэвтэрсэн байхыг шаардана
                         .anyRequest().authenticated()
                 )

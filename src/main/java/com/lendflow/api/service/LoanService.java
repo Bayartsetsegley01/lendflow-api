@@ -3,6 +3,8 @@ package com.lendflow.api.service;
 
 import com.lendflow.api.entity.Loan;
 import com.lendflow.api.entity.User;
+import com.lendflow.api.exception.LoanNotFoundException;
+import com.lendflow.api.exception.UserNotFoundException;
 import com.lendflow.api.repository.LoanRepository;
 import com.lendflow.api.repository.UserRepository;
 import org.springframework.stereotype.Service;
@@ -35,7 +37,7 @@ public class LoanService {
         }
 
         User user = userRepository.findByEmail(userEmail)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new UserNotFoundException("User not found: " + userEmail));
 
         // Зээлийн дүн сарын орлогод харьцангуй хэт их бол шууд татгалзана
         if (!creditAssessmentService.isAmountWithinLimit(user, amount)) {
@@ -64,13 +66,13 @@ public class LoanService {
 
     public List<Loan> getMyLoans(String userEmail) {
         User user = userRepository.findByEmail(userEmail)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new UserNotFoundException("User not found: " + userEmail));
         return loanRepository.findByUserId(user.getId());
     }
 
     public Loan getLoanById(Long id) {
         return loanRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Loan not found with id: " + id));
+                .orElseThrow(() -> new LoanNotFoundException("Loan not found with id: " + id));
     }
 
     // Admin-д зориулсан методууд

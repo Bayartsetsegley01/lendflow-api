@@ -5,6 +5,10 @@ import com.lendflow.api.entity.Account;
 import com.lendflow.api.entity.Loan;
 import com.lendflow.api.entity.Repayment;
 import com.lendflow.api.entity.Transaction;
+import com.lendflow.api.exception.AccountNotFoundException;
+import com.lendflow.api.exception.InsufficientBalanceException;
+import com.lendflow.api.exception.RepaymentAlreadyPaidException;
+import com.lendflow.api.exception.RepaymentNotFoundException;
 import com.lendflow.api.repository.AccountRepository;
 import com.lendflow.api.repository.RepaymentRepository;
 import com.lendflow.api.repository.TransactionRepository;
@@ -56,18 +60,18 @@ public class RepaymentService {
     @Transactional
     public Repayment pay(Long repaymentId) {
         Repayment repayment = repaymentRepository.findById(repaymentId)
-                .orElseThrow(() -> new RuntimeException("Repayment not found with id: " + repaymentId));
+                .orElseThrow(() -> new RepaymentNotFoundException("Repayment not found with id: " + repaymentId));
 
         if (repayment.getStatus() == Repayment.RepaymentStatus.PAID) {
-            throw new IllegalArgumentException("This repayment has already been paid");
+            throw new RepaymentAlreadyPaidException("This repayment has already been paid");
         }
 
         Loan loan = repayment.getLoan();
         Account account = accountRepository.findByUserId(loan.getUser().getId())
-                .orElseThrow(() -> new RuntimeException("Account not found"));
+                .orElseThrow(() -> new AccountNotFoundException("Account not found"));
 
         if (account.getBalance().compareTo(repayment.getAmount()) < 0) {
-            throw new IllegalArgumentException("Insufficient balance");
+            throw new InsufficientBalanceException("Insufficient balance to pay this repayment");
         }
 
         account.setBalance(account.getBalance().subtract(repayment.getAmount()));
